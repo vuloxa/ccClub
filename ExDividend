@@ -1,0 +1,55 @@
+import requests
+import bs4
+import pandas as pd
+import datetime
+
+def get_ExDividend(stkID, year):
+    date_today = datetime.date.today()
+    date_str = str(date_today)
+    year_today = int(date_str[0:4])
+    #year = 3
+    year_initial = year_today - year + 1
+    year_list = range(year_initial, year_today + 1)
+
+    #使用requests
+    STOCK_ID = stkID
+    url = "https://goodinfo.tw/tw/StockDividendSchedule.asp?STOCK_ID=" + STOCK_ID
+    headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'}
+    res = requests.get(url, headers = headers)
+    res.encoding = "utf-8"
+    #res.text-->爬到所有的文字資訊
+
+    #使用bs4的BeautifulSoup
+    soup = bs4.BeautifulSoup(res.text, "lxml")
+    data = soup.select_one("#divDetail")
+
+    #使用pandas
+    df = pd.read_html(data.prettify())
+
+    #第[0]個為除權息表格
+    dfs = df[0]
+    #將重複的標頭篩選掉
+    dfs.columns = dfs.columns.get_level_values(2)
+    #顯示頭10筆資料
+    dfs.head(10)
+
+    #只保留"填息花費日數"前的欄位
+    df2 = dfs.iloc[:, 0:7]
+    #刪除不在意的除權息年度，保留近XX除權息年度
+    drop_year = []
+    for i in range(df2.shape[0]):
+        try:
+            int(df2.iloc[i, 0])
+            if int(df2.iloc[i, 0]) not in year_list:
+                drop_year.append(i)
+        ㄇ= 
+    df2 = df2.drop(drop_year)
+
+    df2.set_axis(['股利發放年度', '股利所屬盈餘期間', '股東會日期', '除息交易日', '除息參考價', '填息完成日', '填息花費日數'], axis = 'columns', inplace = True)
+    return df2
+
+print("請輸入欲查詢的股票代碼：")
+stkID = input()
+print("請輸入欲查詢近X年的除權息資訊：(X需為整數)")
+year = int(input())
+get_ExDividend(stkID, year)
