@@ -1,0 +1,38 @@
+import requests
+import bs4
+import pandas as pd
+
+def get_Information(stkID, year, month):
+    url = "https://mops.twse.com.tw/mops/web/ajax_t100sb02_1"
+
+    #把Form Data裏頭的資料複製後，存成字典，空白的部分可以刪除，而其餘資料皆加上引號改成str
+    payload = {
+                "encodeURIComponent": "1",
+                "step": "1",
+                "firstin": "1",
+                "off": "1",
+                "TYPEK": "sii",
+                "year": year,
+                "month": month,
+                "co_id": stkID
+            }
+    #利用python來送出請求爬取資料，這時的request是搭配post，後面的data則是我們給予請求的條件，最後再用pd.read_html讀取資料
+    res = requests.post(url, data = payload)
+    try:
+        #第[0]個為法說會資訊
+        df = pd.read_html(res.text)[0]
+        #將重複的標頭篩選掉
+        df.columns = df.columns.get_level_values(1)
+        date_info = df.loc[0, '召開法人說明會日期']
+        print(f'此月份法說會日期為：{date_info}')
+    except ValueError:
+        print("此月份無相關法說會資訊")
+    
+print("請輸入欲查詢的股票代碼：")
+stkID = input()
+print("請輸入欲查詢民國Y年：")
+year = int(input())
+print("請輸入欲查詢M月：")
+month = int(input())
+
+get_Information(stkID, year, month)
