@@ -42,7 +42,8 @@ def get_ExDividend(stkID, year):
             int(df2.iloc[i, 0])
             if int(df2.iloc[i, 0]) not in year_list:
                 drop_year.append(i)
-        ㄇ= 
+        except ValueError:
+            drop_year.append(i)
     df2 = df2.drop(drop_year)
 
     df2.set_axis(['股利發放年度', '股利所屬盈餘期間', '股東會日期', '除息交易日', '除息參考價', '填息完成日', '填息花費日數'], axis = 'columns', inplace = True)
